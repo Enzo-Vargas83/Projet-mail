@@ -26,27 +26,48 @@ typedef struct
    int PtsFidelite;
 } CLIENT;
 
-void GenererVhs(VHS *vhs, FILE *fichier);
+void creerVHS(VHS *pfilm, FILE *fichier);
 void displaylastVHS(VHS *vhs);
 
-void GenererVhs(VHS *vhs, FILE *fichier)
-{
-   char tabActeurs[SIZE_CHAINE][SIZE_CHAINE] = {"Johnny Cos", "Manuel Ferrari", "Papo Siffredi"};
-   char nomFilms[SIZE_CHAINE][SIZE_CHAINE] = {"La bonne, la bite et la truante", "Fuck club", "Forest cum", "Gangbangable"};
-   for(int i = 0; i < 3; i++)
-   {
-   	for(int y = 0; y < SIZE_CHAINE; y++)
-   	{
-   		vhs->Nom[y] = nomFilms[i][y];
-   		vhs->ActeurStar[y] = tabActeurs[i][y];
-   		//mettre une fonction qui insere la vhs generer
-   	}
+
+void creerVHS(VHS *pfilm, FILE *fichier){
+
+	printf("Rentrer ID de la VHS: ");
+	scanf("%s",pfilm->ID);
+
+	printf("Rentrer nom de la VHS: ");
+	scanf("%s",pfilm->Nom);
+
+	printf("Rentrer la catégorie de la VHS: ");
+	scanf("%s",pfilm->Categorie);
+
+	int i;
+	printf("Combien il y a t-il d'acteur?: ");
+	scanf("%d",&i);
+
+	switch(i){
+
+	case(1):
+		printf("Rentrer le nom de l'acteur: ");
+		scanf("%s",pfilm->ActeurStar);
+		break;
+	case(2):
+		printf("Rentrer le nom du premier acteur: ");
+		scanf("%s",pfilm->ActeurStar);
+		printf("Rentrer le nom du deuxième acteur: ");
+		scanf("%s",pfilm->ActeurStar2);
+		break;
+	case(3):
+		printf("Rentrer le nom du premier acteur: ");
+		scanf("%s",pfilm->ActeurStar);
+		printf("Rentrer le nom du deuxième acteur: ");
+		scanf("%s",pfilm->ActeurStar2);
+		printf("Rentrer le nom du troisième acteur: ");
+		scanf("%s",pfilm->ActeurStar3);
+		break;
+	}
 	fseek(fichier,0,SEEK_END);
-	fwrite(&vhs, sizeof(VHS),1, fichier);
-	fwrite (&input1, sizeof(struct person), 1, outfile);
-    	fwrite (&input2, sizeof(struct person), 1, outfile);
-   	printf("\n");
-   } 
+	fwrite(&pfilm, sizeof(VHS),1, fichier);
 }
 
 //provisoire
@@ -57,23 +78,13 @@ void displayVHS(VHS *vhs)
 }
 
 void displayALLVHS(FILE *fichier)
-{
-    printf("affichage VHS\n");
-    VHS vhs;
-    fseek(fichier,0,SEEK_SET);
-
-     while(fread(&vhs, sizeof(VHS), 1, fichier))
-     {
-        printf ("id = %s name = %s\n", vhs.Nom, vhs.ActeurStar);
-     }
-    
-
+{   
 }
 
 int main( int argc, char * argv[] ) {
 	VHS vhs;
 	FILE *fichier;
 	fichier = fopen("database.dat", "w");
-	GenererVhs(&vhs, fichier);
-	displaylastVHS(&vhs);
+	creerVHS(&vhs, fichier);
+	displayVHS(&vhs);
 }
