@@ -26,13 +26,13 @@ typedef struct
    int PtsFidelite;
 } CLIENT;
 
-void GenererVhs(VHS *vhs);
+void GenererVhs(VHS *vhs, FILE *fichier);
 void displaylastVHS(VHS *vhs);
 
-void GenererVhs(VHS *vhs)
+void GenererVhs(VHS *vhs, FILE *fichier)
 {
    char tabActeurs[SIZE_CHAINE][SIZE_CHAINE] = {"Johnny Cos", "Manuel Ferrari", "Papo Siffredi"};
-   char nomFilms[SIZE_CHAINE][SIZE_CHAINE] = {"La bonne, la bite et la truante", "Fuck club", "Forest cum"};
+   char nomFilms[SIZE_CHAINE][SIZE_CHAINE] = {"La bonne, la bite et la truante", "Fuck club", "Forest cum", "Gangbangable"};
    for(int i = 0; i < 3; i++)
    {
    	for(int y = 0; y < SIZE_CHAINE; y++)
@@ -41,19 +41,39 @@ void GenererVhs(VHS *vhs)
    		vhs->ActeurStar[y] = tabActeurs[i][y];
    		//mettre une fonction qui insere la vhs generer
    	}
+	fseek(fichier,0,SEEK_END);
+	fwrite(&vhs, sizeof(VHS),1, fichier);
+	fwrite (&input1, sizeof(struct person), 1, outfile);
+    	fwrite (&input2, sizeof(struct person), 1, outfile);
    	printf("\n");
    } 
 }
 
 //provisoire
-void displaylastVHS(VHS *vhs)
+void displayVHS(VHS *vhs)
 {
 	printf("Films : %s\n", vhs->Nom);
 	printf("nom acteur star : %s\n", vhs->ActeurStar);
 }
 
+void displayALLVHS(FILE *fichier)
+{
+    printf("affichage VHS\n");
+    VHS vhs;
+    fseek(fichier,0,SEEK_SET);
+
+     while(fread(&vhs, sizeof(VHS), 1, fichier))
+     {
+        printf ("id = %s name = %s\n", vhs.Nom, vhs.ActeurStar);
+     }
+    
+
+}
+
 int main( int argc, char * argv[] ) {
 	VHS vhs;
-	GenererVhs(&vhs);
+	FILE *fichier;
+	fichier = fopen("database.dat", "w");
+	GenererVhs(&vhs, fichier);
 	displaylastVHS(&vhs);
 }
