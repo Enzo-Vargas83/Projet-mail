@@ -5,7 +5,7 @@
 #include <time.h>
 #include <string.h>
 
-#define SIZE_CHAINE 15
+#define SIZE_CHAINE 35
 
 typedef struct
 {
@@ -27,28 +27,33 @@ typedef struct
 } CLIENT;
 
 void GenererVhs(VHS *vhs);
-void displayActeur(VHS *vhs);
+void displaylastVHS(VHS *vhs);
 
 void GenererVhs(VHS *vhs)
 {
-   char str[SIZE_CHAINE][SIZE_CHAINE] = {"Johnny Cos", "Manuel Ferrari"};
-   for(int i = 0; i < 2; i++)
+   char tabActeurs[SIZE_CHAINE][SIZE_CHAINE] = {"Johnny Cos", "Manuel Ferrari", "Papo Siffredi"};
+   char nomFilms[SIZE_CHAINE][SIZE_CHAINE] = {"La bonne, la bite et la truante", "Fuck club", "Forest cum"};
+   for(int i = 0; i < 3; i++)
    {
    	for(int y = 0; y < SIZE_CHAINE; y++)
    	{
-   		vhs->Nom[y] = str[i][y];
+   		vhs->Nom[y] = nomFilms[i][y];
+   		vhs->ActeurStar[y] = tabActeurs[i][y];
+   		//mettre une fonction qui insere la vhs generer
    	}
    	printf("\n");
    } 
 }
 
-void displayActeur(VHS *vhs)
+//provisoire
+void displaylastVHS(VHS *vhs)
 {
-	printf("nom : %s\n", vhs->Nom);
+	printf("Films : %s\n", vhs->Nom);
+	printf("nom acteur star : %s\n", vhs->ActeurStar);
 }
 
 int main( int argc, char * argv[] ) {
 	VHS vhs;
 	GenererVhs(&vhs);
-	displayActeur(&vhs);
+	displaylastVHS(&vhs);
 }
