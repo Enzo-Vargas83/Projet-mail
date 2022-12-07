@@ -27,7 +27,7 @@ typedef struct
 } CLIENT;
 
 void creerVHS(VHS *pfilm, FILE *fichier);
-void displaylastVHS(VHS *vhs);
+void displayVHS(VHS *vhs);
 
 
 void creerVHS(VHS *pfilm, FILE *fichier){
@@ -68,9 +68,9 @@ void creerVHS(VHS *pfilm, FILE *fichier){
 	}
 	fseek(fichier,0,SEEK_END);
 	fwrite(&pfilm, sizeof(VHS),1, fichier);
+	fclose(fichier);
 }
 
-//provisoire
 void displayVHS(VHS *vhs)
 {
 	printf("Films : %s\n", vhs->Nom);
@@ -79,12 +79,20 @@ void displayVHS(VHS *vhs)
 
 void displayALLVHS(FILE *fichier)
 {   
+    VHS vhs;
+    fichier = fopen("database.dat", "r");
+    fseek(fichier ,0,SEEK_SET);
+    while(fread(&vhs,sizeof(VHS),1,fichier)!=0)
+    {
+        printf("nom : %s\n", vhs.Nom);
+        printf("Acteur : %s\n", vhs.ActeurStar);
+    }
 }
 
 int main( int argc, char * argv[] ) {
 	VHS vhs;
 	FILE *fichier;
 	fichier = fopen("database.dat", "w");
-	creerVHS(&vhs, fichier);
-	displayVHS(&vhs);
+	//creerVHS(&vhs, fichier);
+	displayALLVHS(fichier);
 }
