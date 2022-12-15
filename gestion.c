@@ -5,13 +5,13 @@
 #include <time.h>
 #include <string.h>
 
-#define SIZE_CHAINE 25
+#define SIZE_CHAINE 70
 #define SIZE_ID 5
 
 typedef struct
 {
    int Duree;
-   char ID[SIZE_ID];
+   char ID[SIZE_CHAINE];
    char Nom[SIZE_CHAINE];
    char Categorie[SIZE_CHAINE];
    char ActeurStar[SIZE_CHAINE];
@@ -20,12 +20,13 @@ typedef struct
 } VHS;
 typedef struct
 {
-   char ID[SIZE_ID];
+   char ID[SIZE_CHAINE];
    char NumTel[SIZE_CHAINE];
    char Nom[SIZE_CHAINE];
    char Mail[SIZE_CHAINE];
    int NbLocation;
    int PtsFidelite;
+   int important;
 } CLIENT;
 typedef struct
 {
@@ -40,6 +41,14 @@ typedef struct
     char WORD[SIZE_CHAINE];
     char ANSWER[150]; 
 }KEYWORD;
+typedef struct
+{
+    char ID[5];
+    char emetteur[50];
+    char destinataire[50];
+    char objet[SIZE_CHAINE];
+    char corps[150]; 
+}REPONSE;
 
 
 void displayMenu();
@@ -47,15 +56,26 @@ void adminMenu();
 int checkChaine(char chaine[], char chaine2[]);
 int longeurChaine(char chaine[]);
 
+void checkForKeyword(MAIL *mail);
+void displayKeyword(KEYWORD *keyword);
+
+REPONSE lowerREP(REPONSE pmail);
+void creerREP(MAIL *pmail);
+
 int checkIDVHS(char *IDtest);
 void creerVHS(VHS *pfilm);
-void deleteVHS();
-void DeleteByNom(char inputUser[SIZE_CHAINE]);
+void DeleteVHSByID();
+void DeleteVHSByNom();
+
 void displayVhsInfo(VHS *vhs);
 void displayALLVHS(FILE *fichier);
 void searchVHSbyCategorie(MAIL pmail);
+void displayAllREP();
+void displayREP(REPONSE *mail);
+void searchVHSbyNom(VHS vhsToFind, FILE *fichier);
 
 int checkIDClient(char *IDtest);
+void displayCLIENT(CLIENT *client);
 void displayALLClient();
 
 void creerMail(MAIL *pmail);
@@ -64,15 +84,15 @@ int checkIDMAIL(char *IDtest);
 FILE* OpenFileClient(FILE *fichier, int mode);
 FILE* OpenFileVhs(FILE *fichier, int mode);
 FILE* OpenFileMail(FILE *fichier, int mode);
+FILE* OpenFileREP(FILE *fichier, int mode);
 
-
-FILE* OpenFileClient(FILE *fichier, int mode)
+FILE* OpenFileREP(FILE *fichier, int mode)
 {
     switch (mode)
     {
     case 1:
         // open file in order to write
-        fichier = fopen("clientDataBase.bin", "ab+");
+        fichier = fopen("reponseDataBase.bin", "ab+");
         if(fichier == NULL)
     	{
 		printf("Error opening file\n");
@@ -81,7 +101,67 @@ FILE* OpenFileClient(FILE *fichier, int mode)
         break;
     case 2:
     	// open file in order to READ
+        fichier = fopen("reponseDataBase.bin", "rb+");
+        if(fichier == NULL)
+    	{
+		printf("Error opening file\n");
+		exit(1);
+    	}
+        break;
+    }
+    return fichier;
+}
+FILE* OpenFileClient(FILE *fichier, int mode)
+{
+    switch (mode)
+    {
+    case 1:
+        //create and open file in order to write at the end of it
+        fichier = fopen("clientDataBase.bin", "ab+");
+        if(fichier == NULL)
+    	{
+		printf("Error opening file\n");
+		exit(1);
+    	}
+        break;
+    case 2:
+    	//open file in order to READ
+    	fichier = fopen("clientDataBase.bin", "ab+");
+    	fclose(fichier);
         fichier = fopen("clientDataBase.bin", "rb+");
+        if(fichier == NULL)
+    	{
+		printf("Error opening file\n");
+		exit(1);
+    	}
+        break;
+    case 3:
+    	//create and open file in order to write at the end of it
+    	fichier = fopen("tempc.bin", "ab+");
+    	fclose(fichier);
+        fichier = fopen("tempc.bin", "wb+");
+        if(fichier == NULL)
+    	{
+		printf("Error opening file\n");
+		exit(1);
+    	}
+        break;
+    case 4:
+    	// open file in order to READ
+    	fichier = fopen("clientDataBase.bin", "ab+");
+    	fclose(fichier);
+        fichier = fopen("clientDataBase.bin", "wb+");
+        if(fichier == NULL)
+    	{
+		printf("Error opening file\n");
+		exit(1);
+    	}
+        break;
+    case 5:
+    	// open file in order to READ
+    	fichier = fopen("tempc.bin", "ab+");
+    	fclose(fichier);
+        fichier = fopen("tempc.bin", "rb+");
         if(fichier == NULL)
     	{
 		printf("Error opening file\n");
@@ -96,7 +176,7 @@ FILE* OpenFileKeyword(FILE *fichier, int mode)
     switch (mode)
     {
     case 1:
-        // open file in order to write
+        //create and open file in order to write at the end of it
         fichier = fopen("keywordDataBase.bin", "ab+");
         if(fichier == NULL)
     	{
@@ -105,8 +185,43 @@ FILE* OpenFileKeyword(FILE *fichier, int mode)
     	}
         break;
     case 2:
-    	// open file in order to READ
+    	//open file in order to READ
+    	fichier = fopen("keywordDataBase.bin", "ab+");
+    	fclose(fichier);
         fichier = fopen("keywordDataBase.bin", "rb+");
+        if(fichier == NULL)
+    	{
+		printf("Error opening file\n");
+		exit(1);
+    	}
+        break;
+    case 3:
+    	//create and open file in order to write at the end of it
+    	fichier = fopen("tempk.bin", "ab+");
+    	fclose(fichier);
+        fichier = fopen("tempk.bin", "wb+");
+        if(fichier == NULL)
+    	{
+		printf("Error opening file\n");
+		exit(1);
+    	}
+        break;
+    case 4:
+    	// open file in order to READ
+    	fichier = fopen("keywordDataBase.bin", "ab+");
+    	fclose(fichier);
+        fichier = fopen("keywordDataBase.bin", "wb+");
+        if(fichier == NULL)
+    	{
+		printf("Error opening file\n");
+		exit(1);
+    	}
+        break;
+    case 5:
+    	// open file in order to READ
+    	fichier = fopen("tempk.bin", "ab+");
+    	fclose(fichier);
+        fichier = fopen("tempk.bin", "rb+");
         if(fichier == NULL)
     	{
 		printf("Error opening file\n");
@@ -142,7 +257,9 @@ FILE* OpenFileVhs(FILE *fichier, int mode)
         break;
     case 3:
     	//create and open file in order to write at the end of it
-        fichier = fopen("temp.bin", "ab+");
+    	fichier = fopen("temp.bin", "ab+");
+    	fclose(fichier);
+        fichier = fopen("temp.bin", "wb+");
         if(fichier == NULL)
     	{
 		printf("Error opening file\n");
@@ -217,7 +334,8 @@ void creerVHS(VHS *pfilm){
 	fflush(stdout);
 	
 	printf("Rentrer la catégorie de la VHS: ");
-	scanf("%s",pfilm->Categorie);
+	fgets(pfilm->Categorie,SIZE_CHAINE,stdin);
+	fflush(stdout);
 
 	int i;
 	printf("Combien il y a t-il d'acteur?: ");
@@ -227,21 +345,30 @@ void creerVHS(VHS *pfilm){
 
 	case(1):
 		printf("Rentrer le nom de l'acteur: ");
-		scanf("%s",pfilm->ActeurStar);
+		getchar();
+		fgets(pfilm->ActeurStar,SIZE_CHAINE,stdin);
+		fflush(stdout);
 		break;
 	case(2):
+		getchar();
 		printf("Rentrer le nom du premier acteur: ");
-		scanf("%s",pfilm->ActeurStar);
+		fgets(pfilm->ActeurStar,SIZE_CHAINE,stdin);
+		fflush(stdout);
 		printf("Rentrer le nom du deuxième acteur: ");
-		scanf("%s",pfilm->ActeurStar2);
+		fgets(pfilm->ActeurStar2,SIZE_CHAINE,stdin);
+		fflush(stdout);
 		break;
 	case(3):
+		getchar();
 		printf("Rentrer le nom du premier acteur: ");
-		scanf("%s",pfilm->ActeurStar);
+		fgets(pfilm->ActeurStar,SIZE_CHAINE,stdin);
+		fflush(stdout);
 		printf("Rentrer le nom du deuxième acteur: ");
-		scanf("%s",pfilm->ActeurStar2);
+		fgets(pfilm->ActeurStar2,SIZE_CHAINE,stdin);
+		fflush(stdout);
 		printf("Rentrer le nom du troisième acteur: ");
-		scanf("%s",pfilm->ActeurStar3);
+		fgets(pfilm->ActeurStar3,SIZE_CHAINE,stdin);
+		fflush(stdout);
 		break;
 	}
 	printf("\n");
@@ -307,11 +434,11 @@ void creerMail(MAIL *pmail){
  
     printf("\nRentrer l objet du mail: ");
     getchar();
-	fgets(pmail->objet,25,stdin);
+    fgets(pmail->objet,25,stdin);
 
     printf("\nRentrer le corps du mail: ");
     getchar();
-	fgets(pmail->corps,150,stdin); 
+    fgets(pmail->corps,150,stdin); 
     
     fichier = OpenFileMail(fichier, 1);
     fseek(fichier,0,SEEK_END);
@@ -342,15 +469,6 @@ void displayAllMail()
     }
     fclose(fichier);
 }
-void deleteVHS()
-{
-    VHS vhs;
-    char input[SIZE_CHAINE];
-    
-    printf("Entrer l'ID ou le nom de la VHS à supprimer : ");
-    scanf("%s", input);
-    DeleteByNom(input);
-}
 
 void displayVhsInfo(VHS *vhs)
 {
@@ -358,6 +476,7 @@ void displayVhsInfo(VHS *vhs)
 	printf("ID : %s\n", vhs->ID);
     	printf("Nom : %s\n", vhs->Nom);
     	printf("Categorie : %s", vhs->Categorie);
+    	printf("Acteur principal : %s", vhs->ActeurStar);
     	printf("\n==========================\n");
 }
 
@@ -379,6 +498,12 @@ MAIL lowerMAIL(MAIL pmail)
 	{
           pmail.objet[i] = tolower(pmail.objet[i]);
 	}
+		for(int i = 0; pmail.corps[i]; i++)
+	{
+          pmail.corps[i] = tolower(pmail.corps[i]);
+	}
+	
+	
 	return pmail;
 }
 
@@ -389,6 +514,15 @@ VHS lowerVHS (VHS vhs)
           vhs.Categorie[i] = tolower(vhs.Categorie[i]);
 	}
 	return vhs;
+}
+
+CLIENT lowerClient (CLIENT client)
+{
+	for(int i = 0; client.Nom[i]; i++)
+	{
+          client.Nom[i] = tolower(client.Nom[i]);
+	}
+	return client;
 }
 
 void searchVHSbyCategorie(MAIL pmail)
@@ -414,9 +548,63 @@ void searchVHSbyCategorie(MAIL pmail)
     }
     
 }
-
-void DeleteByNom(char inputUser[SIZE_CHAINE])
+void DeleteKeyword()
 {
+    printf("Entrer le mot clé : ");
+    KEYWORD input;
+    getchar();
+    fgets(input.WORD,SIZE_CHAINE,stdin);
+    fflush(stdout);
+    input.WORD[strlen(input.WORD)-1] = '\0';
+    KEYWORD key;
+    FILE *fichier;
+    FILE *temp;
+    printf("recherche en cours....\n");
+    fichier = OpenFileKeyword(fichier, 2);
+    temp = OpenFileKeyword(fichier, 3);
+    bool finded = false;
+    fseek(fichier,0,SEEK_SET);
+    fseek(temp,0,SEEK_SET);
+    while(fread(&key, sizeof(KEYWORD), 1, fichier))
+    {    
+    	printf("keyword input : [%s]\n", input.WORD);
+    	printf("keyword data : [%s]\n", key.WORD);
+        if(strcmp(key.WORD, input.WORD) == 0)
+        {
+           printf("correspondance trouver, vhs supprimer");
+           finded = true;
+        }
+        else 
+        {
+        fwrite(&key, sizeof(KEYWORD),1, temp);
+        }
+    }
+    if(finded == false)
+    {
+        printf("Aucune correspondance trouvé dans notre catalogue\n");
+    }
+    fclose(fichier);
+    fclose(temp);
+    temp = OpenFileKeyword(fichier, 5);
+    fichier = OpenFileKeyword(fichier, 4);
+    fseek(fichier,0,SEEK_SET);
+    fseek(temp,0,SEEK_SET);
+    while(fread(&key, sizeof(KEYWORD), 1, temp))
+    {    
+           fwrite(&key, sizeof(KEYWORD),1, fichier);
+    }
+    fclose(fichier);
+    fclose(temp);
+}
+
+void DeleteVHSByID()
+{
+    printf("Entrer l'ID de la VHS à supprimer : ");
+    VHS input;
+    getchar();
+    fgets(input.ID,SIZE_CHAINE,stdin);
+    fflush(stdout);
+    input.ID[strlen(input.ID)-1] = '\0';
     VHS vhs;
     FILE *fichier;
     FILE *temp;
@@ -427,20 +615,20 @@ void DeleteByNom(char inputUser[SIZE_CHAINE])
     fseek(fichier,0,SEEK_SET);
     fseek(temp,0,SEEK_SET);
     while(fread(&vhs, sizeof(VHS), 1, fichier))
-    {	
-    	if(strcmp(vhs.Nom, inputUser) == 0)
-    	{
-    	   printf("correspondance trouver, vhs supprimer");
-    	   finded = true;
-    	}
-    	else 
-    	{
-		fwrite(&vhs, sizeof(VHS),4, temp);
-    	}
+    {    
+        if(strcmp(vhs.ID, input.ID) == 0)
+        {
+           printf("correspondance trouver, vhs supprimer");
+           finded = true;
+        }
+        else 
+        {
+        fwrite(&vhs, sizeof(VHS),1, temp);
+        }
     }
     if(finded == false)
     {
-    	printf("Aucune correspondance trouvé dans notre catalogue\n");
+        printf("Aucune correspondance trouvé dans notre catalogue\n");
     }
     fclose(fichier);
     fclose(temp);
@@ -449,14 +637,252 @@ void DeleteByNom(char inputUser[SIZE_CHAINE])
     fseek(fichier,0,SEEK_SET);
     fseek(temp,0,SEEK_SET);
     while(fread(&vhs, sizeof(VHS), 1, temp))
-    {	
+    {    
            fwrite(&vhs, sizeof(VHS),1, fichier);
     }
     fclose(fichier);
     fclose(temp);
 }
 
+void DeleteVHSByNom()
+{
+    printf("Entrer le nom de la VHS à supprimer : ");
+    VHS input;
+    getchar();
+    fgets(input.Nom,SIZE_CHAINE,stdin);
+    fflush(stdout);
+    VHS vhs;
+    FILE *fichier;
+    FILE *temp;
+    printf("recherche en cours....\n");
+    fichier = OpenFileVhs(fichier, 2);
+    temp = OpenFileVhs(fichier, 3);
+    bool finded = false;
+    fseek(fichier,0,SEEK_SET);
+    fseek(temp,0,SEEK_SET);
 
+    while(fread(&vhs, sizeof(VHS), 1, fichier))
+    {    
+        if(strcmp(vhs.Nom, input.Nom) == 0)
+        {
+           printf("correspondance trouver, vhs supprimer");
+           finded = true;
+        }
+        else 
+        {
+        fwrite(&vhs, sizeof(VHS),1, temp);
+        }
+    }
+    if(finded == false)
+    {
+        printf("Aucune correspondance trouvé dans notre catalogue\n");
+    }
+    fclose(fichier);
+    fclose(temp);
+    temp = OpenFileVhs(fichier, 5);
+    fichier = OpenFileVhs(fichier, 4);
+    fseek(fichier,0,SEEK_SET);
+    fseek(temp,0,SEEK_SET);
+    while(fread(&vhs, sizeof(VHS), 1, temp))
+    {    
+           fwrite(&vhs, sizeof(VHS),1, fichier);
+    }
+    fclose(fichier);
+    fclose(temp);
+}
+
+void DeleteClientByID()
+{
+    printf("Entrer l'ID du client à supprimer : ");
+    CLIENT input;
+    getchar();
+    fgets(input.ID,SIZE_CHAINE,stdin);
+    fflush(stdout);
+    input.ID[strlen(input.ID)-1] = '\0';
+    CLIENT client;
+    FILE *fichier;
+    FILE *temp;
+    printf("recherche en cours....\n");
+    fichier = OpenFileClient(fichier, 2);
+    temp = OpenFileClient(fichier, 3);
+    bool finded = false;
+    fseek(fichier,0,SEEK_SET);
+    fseek(temp,0,SEEK_SET);
+
+    while(fread(&client, sizeof(CLIENT), 1, fichier))
+    {    
+        if(strcmp(client.ID, input.ID) == 0)
+        {
+           printf("correspondance trouver, vhs supprimer");
+           finded = true;
+        }
+        else 
+        {
+        fwrite(&client, sizeof(CLIENT),1, temp);
+        }
+    }
+    if(finded == false)
+    {
+        printf("Aucune correspondance trouvé dans notre catalogue\n");
+    }
+    fclose(fichier);
+    fclose(temp);
+    temp = OpenFileClient(fichier, 5);
+    fichier = OpenFileClient(fichier, 4);
+    fseek(fichier,0,SEEK_SET);
+    fseek(temp,0,SEEK_SET);
+    while(fread(&client, sizeof(CLIENT), 1, temp))
+    {    
+           fwrite(&client, sizeof(CLIENT),1, fichier);
+    }
+    fclose(fichier);
+    fclose(temp);
+}
+
+void AddPtstoclient()
+{
+    printf("Entrer le nom du client : ");
+    CLIENT input;
+    getchar();
+    fgets(input.Nom,SIZE_CHAINE,stdin);
+    fflush(stdout);
+    input.Nom[strlen(input.Nom)-1] = '\0';
+    CLIENT client;
+    FILE *fichier;
+    FILE *temp;
+    printf("recherche en cours....\n");
+    fichier = OpenFileClient(fichier, 2);
+    temp = OpenFileClient(fichier, 3);
+    bool finded = false;
+    fseek(fichier,0,SEEK_SET);
+    fseek(temp,0,SEEK_SET);
+    while(fread(&client, sizeof(CLIENT), 1, fichier))
+    {    
+        if(strcmp(lowerClient(client).Nom, lowerClient(input).Nom) == 0)
+        {
+           printf("Entrer le nombre de point à ajouter : ");
+           int nb = 0;
+           scanf("%d", &nb);
+           client.PtsFidelite = client.PtsFidelite + nb;
+           fwrite(&client, sizeof(CLIENT),1, temp);
+           finded = true;
+        }
+        else 
+        {
+        fwrite(&client, sizeof(CLIENT),1, temp);
+        }
+    }
+    if(finded == false)
+    {
+        printf("Aucune correspondance trouvé dans notre catalogue\n");
+    }
+    fclose(fichier);
+    fclose(temp);
+    temp = OpenFileClient(fichier, 5);
+    fichier = OpenFileClient(fichier, 4);
+    fseek(fichier,0,SEEK_SET);
+    fseek(temp,0,SEEK_SET);
+    while(fread(&client, sizeof(CLIENT), 1, temp))
+    {    
+           fwrite(&client, sizeof(CLIENT),1, fichier);
+    }
+    fclose(fichier);
+    fclose(temp);
+}
+void DeleteClientByNom()
+{
+    printf("Entrer le nom du client à supprimer : ");
+    CLIENT input;
+    getchar();
+    fgets(input.Nom,SIZE_CHAINE,stdin);
+    fflush(stdout);
+    input.ID[strlen(input.ID)-1] = '\0';
+    CLIENT client;
+    FILE *fichier;
+    FILE *temp;
+    printf("recherche en cours....\n");
+    fichier = OpenFileClient(fichier, 2);
+    temp = OpenFileClient(fichier, 3);
+    bool finded = false;
+    fseek(fichier,0,SEEK_SET);
+    fseek(temp,0,SEEK_SET);
+
+    while(fread(&client, sizeof(CLIENT), 1, fichier))
+    {    
+        if(strcmp(client.Nom, input.Nom) == 0)
+        {
+           printf("correspondance trouver, vhs supprimer");
+           finded = true;
+        }
+        else 
+        {
+        fwrite(&client, sizeof(CLIENT),1, temp);
+        }
+    }
+    if(finded == false)
+    {
+        printf("Aucune correspondance trouvé dans notre catalogue\n");
+    }
+    fclose(fichier);
+    fclose(temp);
+    temp = OpenFileClient(fichier, 5);
+    fichier = OpenFileClient(fichier, 4);
+    fseek(fichier,0,SEEK_SET);
+    fseek(temp,0,SEEK_SET);
+    while(fread(&client, sizeof(CLIENT), 1, temp))
+    {    
+           fwrite(&client, sizeof(CLIENT),1, fichier);
+    }
+    fclose(fichier);
+    fclose(temp);
+}
+
+void searchClientbyNom(CLIENT clientToFind)
+{
+    CLIENT client;
+    FILE *fichier;
+    printf("recherche en cours....\n");
+    fichier = OpenFileClient(fichier, 2);
+    bool finded = false;
+    while(fread(&client, sizeof(CLIENT), 1, fichier))
+    {
+    	printf("\nclient fic : %s\n", client.Nom);
+    	printf("\nclient : %s\n", clientToFind.Nom);
+    	if(strcmp(client.Nom, clientToFind.Nom) == 0)
+    	{
+    	   printf("Correspondance trouvé pour : %s\n", client.Nom);
+    	   displayCLIENT(&client);
+    	   finded = true;
+    	}
+    }
+    if(finded == false)
+    {
+    	printf("Aucune correspondance trouvé dans notre catalogue\n");
+    }
+    
+}
+void searchClientbyID(CLIENT clientToFind)
+{
+    CLIENT client;
+    FILE *fichier;
+    printf("recherche en cours....\n");
+    fichier = OpenFileClient(fichier, 2);
+    bool finded = false;
+    while(fread(&client, sizeof(CLIENT), 1, fichier))
+    {
+    	if(strcmp(client.ID, clientToFind.ID) == 0)
+    	{
+    	   printf("Correspondance trouvé pour : %s\n", client.Nom);
+    	   displayCLIENT(&client);
+    	   finded = true;
+    	}
+    }
+    if(finded == false)
+    {
+    	printf("Aucune correspondance trouvé dans notre catalogue\n");
+    }
+    
+}
 void searchVHSbyNom(VHS vhsToFind, FILE *fichier)
 {
     VHS vhs;
@@ -469,6 +895,29 @@ void searchVHSbyNom(VHS vhsToFind, FILE *fichier)
     	{
     	   printf("Correspondance trouvé pour : %s\n", vhsToFind.Nom);
     	   displayVhsInfo(&vhs);
+    	   finded = true;
+    	}
+    }
+    if(finded == false)
+    {
+    	printf("Aucune correspondance trouvé dans notre catalogue\n");
+    }
+    
+}
+
+void searchKEYWORDbyWORD(KEYWORD keyTo)
+{
+    FILE *fichier;
+    KEYWORD key;
+    printf("recherche en cours....\n");
+    fichier = OpenFileKeyword(fichier, 2);
+    bool finded = false;
+    while(fread(&key, sizeof(KEYWORD), 1, fichier))
+    {
+    	if(strcmp(key.WORD, keyTo.WORD) == 0)
+    	{
+    	   printf("Correspondance trouvé pour : %s\n", key.WORD);
+    	   displayKeyword(&key);
     	   finded = true;
     	}
     }
@@ -524,14 +973,14 @@ int checkIDClient(char *IDtest)
 
 void creerClient(CLIENT *pclient)
 {
-	int checkID=0;
-	FILE *fichier;	
+    int checkID=0;
+    FILE *fichier;	
 	
-	while(checkID==0)
+    while(checkID==0)
     {
 	printf("Rentrer l ID du client: ");
-    scanf("%s",pclient->ID);
-    checkID=checkIDClient(pclient->ID);
+        scanf("%s",pclient->ID);
+        checkID=checkIDClient(pclient->ID);
     }
 
 
@@ -543,6 +992,9 @@ void creerClient(CLIENT *pclient)
  
     printf("\nRentrer un mail: ");
     scanf("%s",pclient->Mail);
+    
+    printf("\nRentrer l'importance du client: ");
+    scanf("%d",&pclient->important);
 
     
     pclient->NbLocation = 0;
@@ -649,83 +1101,6 @@ int checkChaine(char *chaine, char *chaine2){
 	//return 1 si la chaine est la meme
 }
 
-int checkContenuMail(MAIL mailRecu){
-	
-	MAIL mail;
-	//searchVHSbyCategorie(mailRecu);
-	if(strstr(mailRecu.objet,"colis")!=NULL||strstr(mailRecu.corps,"colis")){
-		strcpy(mail.ID,mailRecu.ID);
-		strcpy(mail.emetteur,"leo@xgerbille.com");
-		strcpy(mail.destinataire,mailRecu.emetteur);
-		strcpy(mail.objet,"Reponse a votre requete");
-		strcpy(mail.corps,"Veuillez vous rediriger vers la societe de transport\nCordialement");
-		
-		printf("Reponse automatique:\n");
-		displayMail(&mail);
-		
-		return 1;
-		
-}
-
-	if(strstr(mailRecu.objet,"resiliation")!=NULL||strstr(mailRecu.corps,"resiliation")){
-		strcpy(mail.ID,mailRecu.ID);
-		strcpy(mail.emetteur,"leo@xgerbille.com");
-		strcpy(mail.destinataire,mailRecu.emetteur);
-		strcpy(mail.objet,"Reponse a votre requete");
-		strcpy(mail.corps,"Nos equipes etant actuellement surcharge, votre demande ne peut pas etre traite. Veuillez reessayer ulterieurement\nCordialement");
-		
-		printf("Reponse automatique:\n");
-		displayMail(&mail);
-		
-		return 1;
-		
-}
-
-	if(strstr(mailRecu.objet,"quoi")!=NULL||strstr(mailRecu.corps,"quoi")){
-		strcpy(mail.ID,mailRecu.ID);
-		strcpy(mail.emetteur,"leo@xgerbille.com");
-		strcpy(mail.destinataire,mailRecu.emetteur);
-		strcpy(mail.objet,"Reponse a votre requete");
-		strcpy(mail.corps,"Feur\nCordialement");
-		
-		printf("Reponse automatique:\n");
-		displayMail(&mail);
-		
-		return 1;
-		
-}
-
-	if(strstr(mailRecu.objet,"emploi")!=NULL||strstr(mailRecu.corps,"emploi")){
-		strcpy(mail.ID,mailRecu.ID);
-		strcpy(mail.emetteur,"leo@xgerbille.com");
-		strcpy(mail.destinataire,mailRecu.emetteur);
-		strcpy(mail.objet,"Reponse a votre requete");
-		strcpy(mail.corps,"Nous ne recherchons pas d’employe actuellement. Cependant, votre CV sera conserve pour nos futures	offres\nCordialement");
-		
-		printf("Reponse automatique:\n");
-		displayMail(&mail);
-		
-		return 1;	
-	}
-	else
-	{
-		strcpy(mail.ID,mailRecu.ID);
-		strcpy(mail.emetteur,"leo@xgerbille.com");
-		strcpy(mail.destinataire,mailRecu.emetteur);
-		strcpy(mail.objet,"Reponse a votre requete");
-		strcpy(mail.corps,"");
-		
-		printf("Reponse automatique:\n");
-		displayMail(&mail);
-		searchVHSbyCategorie(mailRecu);
-		printf("\n******************************************\n");
-	}
-	
-
-
- return 0; //retourne 0 si RAS
-
-}
 void adminMenu()
 {
 	int adminLoop=0,adminVar=0,adminTypeRecherche=0;
@@ -736,21 +1111,38 @@ void adminMenu()
         FILE *fichier;
 	while(adminLoop==0)
 	{
-			printf("Menu admin\n");
-			printf("Pour ajouter ou supprimer une VHS, tapez 1\n");
-			printf("Pour ajouter ou supprimer un compte client, tapez 2\n");
-			printf("Pour afficher la liste des clients, tapez 3\n");
-			printf("Pour ajouter des mots clés, 4\n");
-			printf("Pour afficher la liste des mots clés, 5\n");
-			printf("Pour quitter le mode admin, tapez 6\n");
+		adminmenu:
+			printf("==================Menu admin==================\n");
+			printf("1) Ajouter ou supprimer une VHS\n");
+			printf("2) Ajouter ou supprimer un compte client\n");
+			printf("3) Afficher la liste des clients\n");
+			printf("4) Ajouter ou supprimer des mots clés\n");
+			printf("5) Afficher la liste des mots clés\n");
+			printf("6) Afficher les réponses automatiques envoyées\n");
+			printf("7) Rechercher un mot clé et sa réponse associé\n");
+			printf("8) Ajouter des pts à un client\n");
+			printf("9) Quitter le mode admin\n");
+			printf("==============================================\n");		
 			
-			scanf("%d",&adminVar);
+			if (scanf("%d", &adminVar) != 1)
+
+			{
+
+			    while (getchar() != '\n')
+
+			    continue;
+
+			    printf("Erreur de saisie, rentrez un nombre entre 1 et 7 \n");
+
+			    goto adminmenu;
+
+			}
 			
 			switch(adminVar){
 				
 				case 1:
-				printf("Si vous souhaitez ajouter une VHS, tapez 1\n");
-				printf("Si vous souhaitez supprimer une VHS, tapez 2\n");
+				printf("1) Si vous souhaitez ajouter une VHS\n");
+				printf("2) Si vous souhaitez supprimer une VHS\n");
 				scanf("%d",&adminTypeRecherche);
 				
 				if(adminTypeRecherche==1){
@@ -758,43 +1150,86 @@ void adminMenu()
 					creerVHS(&vhs);
 					
 				}else{
-					
-					deleteVHS();
-					
+					int inputV=0;
+					printf("1) Si vous souhaitez supprimer une VHS par nom\n");
+					printf("2) Si vous souhaitez supprimer une VHS par id \n");
+					scanf("%d",&inputV);
+					if(inputV==1)
+					{
+					    DeleteVHSByNom();
+					}
+					else
+					{
+					   DeleteVHSByID();
+					}			
 				}
 				break;
 				
 				
 				case 2:
-				printf("Si vous souhaitez ajouter un compte client, tapez 1\n");
-				printf("Si vous souhaitez supprimer un compte client, tapez 2\n");
-				scanf("%d",&adminTypeRecherche);
-				
-				if(adminTypeRecherche==1){
+					printf("1) Ajouter un compte client\n");
+					printf("2) Supprimer un compte client\n");
+					scanf("%d",&adminTypeRecherche);
 					
-					creerClient(&client);
-					
-				}else{
-					
-					//Fonction supprimer client
-					
-				}
-				break;
+					if(adminTypeRecherche==1)
+					{
+						
+						creerClient(&client);
+						
+					}
+					else{
+						int inputV=0;
+						printf("1) Si vous souhaitez supprimer un client par nom\n");
+						printf("2) Si vous souhaitez supprimer un client par id \n");
+						scanf("%d",&inputV);
+						if(inputV==1)
+						{
+						    DeleteClientByNom();
+						}
+						else
+						{
+						   DeleteClientByID();
+						}	
+						
+						}
+					break;
 				
 				case 3:
 				
 					displayALLClient();
-				
-				break;
+					break;
 				
 				case 4:
-				
-					creerKEYWORD(&keyword);
+					printf("1) Ajouter un mot clé\n");
+					printf("2) Supprimer un mot clé\n");
+					scanf("%d",&adminTypeRecherche);
+					
+					if(adminTypeRecherche==1)
+					{
+						creerKEYWORD(&keyword);	
+					}
+					else
+					{
+						DeleteKeyword();
+					}
+					break;
 				case 5:
 				
 					displayALLKEYWORD();
 					break;
+					
 				case 6:
+					displayAllREP();
+					break;
+				case 7:
+					KEYWORD keyToFind;
+					printf("Veuillez un mot clé : \n");
+					scanf("%s", keyToFind.WORD);
+					searchKEYWORDbyWORD(keyToFind);
+				case 8:
+					AddPtstoclient();
+					break;
+				case 9:
 					adminLoop=1;
 					break;
 			}
@@ -805,6 +1240,8 @@ void adminMenu()
 		printf("\n\n");		
 	}
 }
+
+
 void displayMenu()
 {
     int mainLoop=0,intMenu=0, intTypeRecherche=0;
@@ -816,27 +1253,37 @@ void displayMenu()
 	
 	while(mainLoop==0)
 	{
-		printf("Menu principal\n");
-		printf("Pour chercher une ou des VHS, tapez 1\n");
-		printf("Pour chercher un client, tapez 2\n");
-		printf("Pour tester la fonction de répose automatique, tapez 3\n");
-		printf("Pour passer en mode admin, tapez 4\n");
-		printf("Pour fermer le programme, tapez 5\n");
-		scanf("%d",&intMenu);
-	
+	  menu:
+		printf("==============Menu principal==============\n");
+		printf("1) Recherche de VHS\n");
+		printf("2) Chercher un client\n");
+		printf("3) Réponse automatique de mail\n");
+		printf("4) Passer en mode admin\n");
+		printf("5) Quitter\n");
+		printf("==========================================\n");	
+		if (scanf("%d", &intMenu) != 1)
+		{
+		    while (getchar() != '\n')
+		    continue;
+		    printf("Erreur de saisie, rentrez un nombre entre 1 et 5 \n");
+		    goto menu;
+		}
 		switch(intMenu)
 		{
 		
 			case 1:
-				printf("Pour utiliser le nom de la VHS, tapez 1\n");
-				printf("sinon, pour utiliser son ID, tapez 2\n");
-				printf("enfin, pour afficher toute les VHS disponible, tapez 3\n");
+
+				printf("==============================================\n");
+				printf("1) Recherche en utilisant le nom de la VHS\n");
+				printf("2) Recherche en utilisant l'ID\n");
+				printf("3) Afficher toutes les VHS en stock\n");
+				printf("==============================================\n");
 				scanf("%d",&intTypeRecherche);
 				
 				if(intTypeRecherche==1)
 				{
 					VHS vhsToFind;
-					printf("Veuillez saisir le nom du film\n");
+					printf("Veuillez saisir le nom du film : \n");
 					getchar();
 					fgets(vhsToFind.Nom,SIZE_CHAINE,stdin);
 					searchVHSbyNom(vhsToFind, fichier);
@@ -845,7 +1292,7 @@ void displayMenu()
 				else if(intTypeRecherche==2)
 				{
 					VHS vhsToFind;
-					printf("Veuillez saisir l'ID du film\n");
+					printf("Veuillez saisir l'ID du film : \n");
 					scanf("%s", vhsToFind.ID);
 					searchVHSbyID(vhsToFind, fichier);
 				}
@@ -857,38 +1304,45 @@ void displayMenu()
 				break;
 				
 			case 2:
-				printf("Pour utiliser le nom du client, tapez 1, sinon, pour utiliser son ID tapez 2\n");
+				printf("1) Recherche par le nom du client\n");
+				printf("2) Recherche par l'ID du client\n");
+
 				scanf("%d",&intTypeRecherche);
 				
 				if(intTypeRecherche==1){
-					//Fonction de recherche client avec nom
+					CLIENT clientToFind;
+					printf("Veuillez saisir le nom du client : \n");
+					scanf("%s", clientToFind.Nom);
+					searchClientbyNom(clientToFind);
 				}
 				else{
-					//Fonction de recherche client avec ID
+					CLIENT clientToFind;
+					printf("Veuillez saisir l'ID du client : \n");
+					scanf("%s", clientToFind.ID);
+					searchClientbyID(clientToFind);
 				}
 			
 				break;
 			
 			case 3:
 			        creerMail(&client_mail);
-			        checkContenuMail(client_mail);
-			        //searchVHSbyCategorie(client_mail);
+			        checkForKeyword(&client_mail);
 			        	
 				break;
 			
 			case 4:
-				printf("Rentrez le mot de passe admin: ");
+				printf("Rentrez le mot de passe administrateur : \n");
 				scanf("%s",MDPentree);
 			
 				if(checkChaine(MDPentree,MDPadmin)==1)
 				{
-					printf("Acces autorise\n");
+					printf("Accès autorisé\n");
 					adminMenu();
 					
 				}
 				else
 				{
-					printf("Acces refuse\n");
+					printf("Accès refusé\n");
 				}				
 				break;
 			case 5:
@@ -911,7 +1365,103 @@ void createAllFile(){
         fclose(fichier);  
         fichier = fopen("keywordDataBase.bin", "ab+");
         fclose(fichier);  
+        fichier = fopen("reponseDataBase.bin", "ab+");
+        fclose(fichier);  
+}
+
+void checkForKeyword(MAIL *mail){
+	
+	FILE *fichier;
+    KEYWORD keyword;
+    MAIL reponse;
+    
+    
+
+
+    fichier = OpenFileKeyword(fichier, 2);
+    fseek(fichier, 0 ,SEEK_SET);
+    while(fread(&keyword, sizeof(KEYWORD), 1, fichier))
+    {
+
+		if(strstr(mail->objet,keyword.WORD)!=NULL || strstr(mail->corps,keyword.WORD)!=NULL){
+			
+		strcpy(reponse.ID,mail->ID);
+		strcpy(reponse.emetteur,"leo@xgerbille.com");
+		strcpy(reponse.destinataire,mail->emetteur);
+		strcpy(reponse.objet,"Reponse a votre requete");
+		strcpy(reponse.corps,keyword.ANSWER);
+		
+		printf("\nReponse automatique:");
+		displayMail(&reponse);
+		creerREP(&reponse);
+			
+		}
+
+    }
+    fclose(fichier);
+	
+}
+
+void displayREP(REPONSE *mail)
+{
+	printf("\n******************************************\n");
+	printf("ID : %s\n", mail->ID);
+    	printf("Emetteur : %s\n", mail->emetteur);
+    	printf("Destinataire : %s\n", mail->destinataire);
+    	printf("objet : %s\n",mail->objet);
+    	printf("corps : %s",mail->corps);
+}
+
+
+void displayAllREP()
+{   
+	FILE *fichier;
+	
+	
+    REPONSE mail;
+    fichier = OpenFileREP(fichier, 2);
+    fseek(fichier, 0 ,SEEK_SET);
+    while(fread(&mail, sizeof(REPONSE), 1, fichier))
+    {
+    	displayREP(&mail);
+    }
+    fclose(fichier);
+}
+
+REPONSE lowerREP(REPONSE pmail)
+{
+	for(int i = 0; pmail.objet[i]; i++)
+	{
+          pmail.objet[i] = tolower(pmail.objet[i]);
 	}
+		for(int i = 0; pmail.corps[i]; i++)
+	{
+          pmail.corps[i] = tolower(pmail.corps[i]);
+	}
+	
+	
+	return pmail;
+}
+
+void creerREP(MAIL *pmail){
+   FILE *fichier;	
+   
+   REPONSE rep;
+
+   strcpy(rep.ID,pmail->ID);
+   strcpy(rep.emetteur,pmail->emetteur);
+   strcpy(rep.destinataire,pmail->destinataire);
+   strcpy(rep.objet,pmail->objet);
+   strcpy(rep.corps,pmail->corps);
+
+    
+    fichier = OpenFileREP(fichier, 1);
+    fseek(fichier,0,SEEK_END);
+    fwrite(&rep, sizeof(REPONSE),1, fichier);
+    fclose(fichier);
+}
+
+
 int main( int argc, char * argv[] ) {
 	VHS vhs;
 	MAIL client_mail;
